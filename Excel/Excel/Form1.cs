@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.OleDb;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,8 +24,10 @@ namespace Excel
         private string excelFilePath;
         //保存文件路径
         private string saveFilePath;
-        //关键字集合，关键字用来做模糊查询分组
-        private List<string> keywordList;
+        //模糊查询分组
+        private List<string> vagueList;
+        //精确查询分组
+        private List<string> accurateList;
 
         //源表字段
         private const string SHCK = "收货仓库";
@@ -68,31 +71,162 @@ namespace Excel
         /// <param name="e"></param>
         private void btnComfirm_Click(object sender, EventArgs e)
         {
-            /* * * * * * * * * * * * * * * * *
-             * 序号  机型  串码  入库日期  备注 *
-             * * * * * * * * * * * * * *  * * */
-            InitKeywordList();
-            string dbCmdStr = string.Empty;
-            string selectStr = "SELECT * FROM {0} ";
-            string whereStr = " WHERE 1=1 ";
-            string groupStr = string.Format(" GROUP BY {0} ", SHCK);
-            foreach (string keyword in keywordList)
+            
+            try
             {
-                whereStr += string.Format(" AND {0} NOT LIKE '%{1}%' ", SHCK, keyword);
-                whereStr += string.Format(" AND {0} NOT LIKE '%{1}' ", SHCK, keyword);
-                whereStr += string.Format(" AND {0} NOT LIKE '{1}%' ", SHCK, keyword);
-            }
-            dbCmdStr = String.Join(" ", selectStr, whereStr, groupStr);//排除掉通过关键字帅选的数据，然后分组
+                this.pbLoading.Visible = true;
+                /* * * * * * * * * * * * * * * * *
+                 * 序号  机型  串码  入库日期  备注 *
+                 * * * * * * * * * * * * * *  * * */
+                DataTable dt = new DataTable();
+                dt.Columns.Add(new DataColumn("序号"));
+                dt.Columns.Add(new DataColumn("机型"));
+                dt.Columns.Add(new DataColumn("串码"));
+                dt.Columns.Add(new DataColumn("入库日期"));
+                dt.Columns.Add(new DataColumn("备注"));
 
-            whereStr = " WHERE 1=1 ";
-            foreach (string keyword in keywordList)
-            {
-                whereStr += string.Format(" AND {0} LIKE '%{1}%' ", SHCK, keyword);
-                whereStr += string.Format(" AND {0} LIKE '%{1}' ", SHCK, keyword);
-                whereStr += string.Format(" AND {0} LIKE '{1}%' ", SHCK, keyword);
-                dbCmdStr += " UNION " + String.Join(" ", selectStr, whereStr, groupStr);
+                //获取模糊查询集合
+                InitVagueList();
+                //获取精确查询集合
+                InitAccurateList();
+                int num = 0;
+                string selectStr = "SELECT 收货仓库,商品名称,串号,颜色,meid FROM {0} ";
+                //string groupStr = string.Format(" GROUP BY {0} ", SHCK);
+                foreach (string item in accurateList)
+                {
+                    string dbCmdStr = string.Empty;
+                    string whereStr = " WHERE 1=1 ";
+                    whereStr += string.Format(" AND {0} = '{1}' ", SHCK, item);
+                    dbCmdStr = String.Join(" ", selectStr, whereStr);
+                    DataTable tmp = GetContentsByExcelFile(dbCmdStr);
+                    if (tmp.Rows.Count > 0)
+                    {
+                        foreach (DataRow row in tmp.Rows)
+                        {
+                            num++;
+                            DataRow r = dt.NewRow();
+                            r["序号"] = num;
+                            r["机型"] = string.Format("{0}-{1}-{2}", tbName.Text, row["商品名称"], row["颜色"]);
+                            r["串码"] = row["meid"];
+                            r["入库日期"] = DateTime.Now.ToString("yyyy-MM-dd");
+                            r["备注"] = row["收货仓库"];
+                            dt.Rows.Add(r);
+                        }
+                    }
+                }
+
+
+                foreach (string item in vagueList)
+                {
+                    string dbCmdStr = string.Empty;
+                    string whereStr = " WHERE 1=1 AND (";
+                    whereStr += string.Format(" {0} LIKE '%{1}%' ", SHCK, item);
+                    whereStr += string.Format(" OR {0} LIKE '%{1}' ", SHCK, item);
+                    whereStr += string.Format(" OR {0} LIKE '{1}%' )", SHCK, item);
+                    dbCmdStr = String.Join(" ", selectStr, whereStr);
+                    DataTable tmp = GetContentsByExcelFile(dbCmdStr);
+                    if (tmp.Rows.Count > 0)
+                    {
+                        foreach (DataRow row in tmp.Rows)
+                        {
+                            num++;
+                            DataRow r = dt.NewRow();
+                            r["序号"] = num;
+                            r["机型"] = string.Format("{0}-{1}-{2}", tbName.Text, row["商品名称"], row["颜色"]);
+                            r["串码"] = row["meid"];
+                            r["入库日期"] = DateTime.Now.ToString("yyyy-MM-dd");
+                            r["备注"] = item;
+                            dt.Rows.Add(r);
+                        }
+                    }
+                }
+
+                if (dt != null && dt.Rows.Count > 0)
+                {
+                    SetRowsToExcel(dt);
+                }
             }
-            DataTable dt = GetContentsByExcelFile(dbCmdStr);
+            catch (Exception ex)
+            {
+                MessageBox.Show("出现错误！" + ex.Message);
+            }
+            this.pbLoading.Visible = false;
+
+        }
+
+        /// <summary>
+        /// 把datatable 写入 excel
+        /// </summary>
+        /// <param name="dt"></param>
+        private void SetRowsToExcel(DataTable dt)
+        {
+            if (!Directory.Exists(tbSavePath.Text))
+                Directory.CreateDirectory(tbSavePath.Text);
+            //if (!File.Exists(tbSavePath.Text))
+            //    File.Create(tbSavePath.Text).Dispose();
+            string fileName = Path.GetFileNameWithoutExtension(tbSavePath.Text);
+            string OLEDBConnStr = string.Format("Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};", tbSavePath.Text);
+            OLEDBConnStr += " Extended Properties=Excel 8.0;";
+            StringBuilder createBuilder = new StringBuilder();
+
+            createBuilder.AppendFormat("CREATE TABLE {0} ( ", fileName);
+            for (int i = 0; i < dt.Columns.Count; i++)
+            {
+                createBuilder.AppendFormat(" [{0}] NTEXT, ", dt.Columns[i]);
+            }
+            createBuilder.Length = createBuilder.Length - 2;
+            createBuilder.Append(" )");
+
+            StringBuilder preInsertBuilder = new StringBuilder();
+            preInsertBuilder.AppendFormat("INSERT INTO {0} (", fileName);
+
+            for (int i = 0; i < dt.Columns.Count; i++)
+            {
+                preInsertBuilder.AppendFormat("[{0}], ", dt.Columns[i]);
+            }
+
+
+            preInsertBuilder.Length = preInsertBuilder.Length - 2;
+            preInsertBuilder.Append(") VALUES (");
+
+            ArrayList insertSqlArrayList = new ArrayList();
+            foreach (DataRow row in dt.Rows)
+            {
+                if (row != null)
+                {
+                    StringBuilder insertBuilder = new StringBuilder();
+                    insertBuilder.Append(preInsertBuilder.ToString());
+                    for (int i = 0; i < dt.Columns.Count; i++)
+                    {
+                        insertBuilder.AppendFormat("'{0}', ", row[dt.Columns[i]]);
+                        preInsertBuilder.AppendFormat("[{0}], ", row[dt.Columns[i]]);
+                    }
+
+
+                    insertBuilder.Length = insertBuilder.Length - 2;
+                    insertBuilder.Append(") ");
+
+                    insertSqlArrayList.Add(insertBuilder.ToString());
+                }
+            }
+
+            OleDbConnection oConn = new OleDbConnection();
+
+            oConn.ConnectionString = OLEDBConnStr;
+            OleDbCommand oCreateComm = new OleDbCommand();
+            oCreateComm.Connection = oConn;
+            oCreateComm.CommandText = createBuilder.ToString();
+
+            oConn.Open();
+            oCreateComm.ExecuteNonQuery();
+            foreach (string insertSql in insertSqlArrayList)
+            {
+                OleDbCommand oInsertComm = new OleDbCommand();
+                oInsertComm.Connection = oConn;
+                oInsertComm.CommandText = insertSql;
+                oInsertComm.ExecuteNonQuery();
+            }
+            oConn.Close();
         }
 
         /// <summary>
@@ -158,35 +292,11 @@ namespace Excel
 
                 try
                 {
-                    oleDbCmd = new OleDbCommand(string.Format(oleDbCmdStr, tableName), oleDbConn);
+                    oleDbCmd = new OleDbCommand(string.Format(oleDbCmdStr, "[" + tableName + "]"), oleDbConn);
                     oleDbAdp = new OleDbDataAdapter(oleDbCmd);
                     oleDbAdp.Fill(oleDt);
                     oleDbConn.Close();
-
-                    //if (oleDt.Rows.Count > 0)
-                    //{
-
-                    //    ArrayList attributeNames = new ArrayList();
-                    //    for (int i = 0; i < oleDt.Columns.Count; i++)
-                    //    {
-                    //        string columnName = oleDt.Columns[i].ColumnName;
-                    //        if (!attributeNames.Contains(columnName))
-                    //            attributeNames.Add(columnName);
-                    //    }
-
-                    //    foreach (DataRow row in oleDt.Rows)
-                    //    {
-                    //        for (int i = 0; i < oleDt.Columns.Count; i++)
-                    //        {
-                    //            string attributeName = attributeNames[i] as string;
-                    //            if (!string.IsNullOrEmpty(attributeName))
-                    //            {
-                    //                string value = row[i].ToString();
-
-                    //            }
-                    //        }
-                    //    }
-                    //}
+                    break;
                 }
                 catch { }
             }
@@ -195,12 +305,54 @@ namespace Excel
         }
 
         /// <summary>
-        /// 初始化关键字集合
+        /// 初始化模糊集合
         /// </summary>
-        public void InitKeywordList()
+        public void InitVagueList()
         {
             var keywordArr = tbKeywords.Text.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            keywordList = new List<string>(keywordArr);
+            vagueList = new List<string>(keywordArr);
+        }
+
+        /// <summary>
+        /// 初始化精确集合
+        /// </summary>
+        public void InitAccurateList()
+        {
+            accurateList = new List<string>();
+            string dbCmdStr = string.Empty;
+            string selectStr = "SELECT " + SHCK + " FROM {0} ";
+            string groupStr = string.Format(" GROUP BY {0} ", SHCK);
+            string whereStr = " WHERE 1=1 ";
+            foreach (string itme in vagueList)
+            {
+                whereStr += string.Format(" AND {0} NOT LIKE '%{1}%' ", SHCK, itme);
+                whereStr += string.Format(" AND {0} NOT LIKE '%{1}' ", SHCK, itme);
+                whereStr += string.Format(" AND {0} NOT LIKE '%{1}' ", SHCK, itme);
+            }
+            dbCmdStr = String.Join(" ", selectStr, whereStr, groupStr);
+            DataTable oleDt = GetContentsByExcelFile(dbCmdStr);
+            if (oleDt.Rows.Count > 0)
+            {
+                //ArrayList attributeNames = new ArrayList();
+                //for (int i = 0; i < oleDt.Columns.Count; i++)
+                //{
+                //    string columnName = oleDt.Columns[i].ColumnName;
+                //    if (!attributeNames.Contains(columnName))
+                //        attributeNames.Add(columnName);
+                //}
+
+                foreach (DataRow row in oleDt.Rows)
+                {
+                    for (int i = 0; i < oleDt.Columns.Count; i++)
+                    {
+                        string value = row[i].ToString();
+                        if (!accurateList.Contains(value))
+                        {
+                            accurateList.Add(value);
+                        }
+                    }
+                }
+            }
         }
     }
 }
