@@ -1,9 +1,9 @@
 E:\programe\github\Excel\Excel\Excel\bin\Debug\Excel.exe.config
 E:\programe\github\Excel\Excel\Excel\bin\Debug\Excel.exe
 E:\programe\github\Excel\Excel\Excel\bin\Debug\Excel.pdb
-E:\programe\github\Excel\Excel\Excel\obj\Debug\Excel.csprojResolveAssemblyReference.cache
 E:\programe\github\Excel\Excel\Excel\obj\Debug\Excel.Form1.resources
 E:\programe\github\Excel\Excel\Excel\obj\Debug\Excel.Properties.Resources.resources
 E:\programe\github\Excel\Excel\Excel\obj\Debug\Excel.csproj.GenerateResource.Cache
 E:\programe\github\Excel\Excel\Excel\obj\Debug\Excel.exe
 E:\programe\github\Excel\Excel\Excel\obj\Debug\Excel.pdb
+E:\programe\github\Excel\Excel\Excel\obj\Debug\Excel.csprojResolveAssemblyReference.cache

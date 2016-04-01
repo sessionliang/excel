@@ -18,6 +18,9 @@ namespace Excel
         public Form1()
         {
             InitializeComponent();
+
+            bgWorker.DoWork += BgWorker_DoWork;
+            bgWorker.RunWorkerCompleted += BgWorker_RunWorkerCompleted;
         }
 
         //excel文件路径
@@ -74,7 +77,11 @@ namespace Excel
 
             try
             {
-                this.pbLoading.Visible = true;
+                //显示加载动画
+                loadingCtl.ShowLoading(this);
+                Application.DoEvents();
+                bgWorker.RunWorkerAsync();
+
                 /* * * * * * * * * * * * * * * * *
                  * 序号  机型  串码  入库日期  备注 *
                  * * * * * * * * * * * * * *  * * */
@@ -99,13 +106,14 @@ namespace Excel
                 int num = 0;
 
                 string selectStr = "SELECT 收货仓库,商品名称,串号,颜色,meid FROM {0} ";
+                string orderStr = " ORDER BY 收货仓库,商品名称,颜色 ";
                 //string groupStr = string.Format(" GROUP BY {0} ", SHCK);
                 foreach (string item in accurateList)
                 {
                     string dbCmdStr = string.Empty;
                     string whereStr = " WHERE 1=1 ";
                     whereStr += string.Format(" AND {0} = '{1}' ", SHCK, item);
-                    dbCmdStr = String.Join(" ", selectStr, whereStr);
+                    dbCmdStr = String.Join(" ", selectStr, whereStr, orderStr);
                     DataTable tmp = GetContentsByExcelFile(dbCmdStr, oleDbConn);
                     if (tmp.Rows.Count > 0)
                     {
@@ -117,7 +125,7 @@ namespace Excel
                             r["机型"] = string.Format("{0}-{1}-{2}", tbName.Text, row["商品名称"], row["颜色"]);
                             r["串码"] = row["meid"];
                             r["入库日期"] = DateTime.Now.ToString("yyyy-MM-dd");
-                            r["备注"] = row["收货仓库"];
+                            r["备注"] = row["收货仓库"].ToString().Replace("仓库", string.Empty);
                             dt.Rows.Add(r);
                         }
                     }
@@ -131,7 +139,7 @@ namespace Excel
                     whereStr += string.Format(" {0} LIKE '%{1}%' ", SHCK, item);
                     whereStr += string.Format(" OR {0} LIKE '%{1}' ", SHCK, item);
                     whereStr += string.Format(" OR {0} LIKE '{1}%' )", SHCK, item);
-                    dbCmdStr = String.Join(" ", selectStr, whereStr);
+                    dbCmdStr = String.Join(" ", selectStr, whereStr, orderStr);
                     DataTable tmp = GetContentsByExcelFile(dbCmdStr, oleDbConn);
                     if (tmp.Rows.Count > 0)
                     {
@@ -162,8 +170,7 @@ namespace Excel
             {
                 MessageBox.Show("出现错误！" + ex.Message);
             }
-            this.pbLoading.Visible = false;
-
+            loadingCtl.Hide();
         }
 
         /// <summary>
@@ -362,5 +369,24 @@ namespace Excel
                 }
             }
         }
+
+
+
+        #region loading window
+        BackgroundWorker bgWorker = new BackgroundWorker();
+        LoadingCtl loadingCtl = new LoadingCtl(162, true);//定义加载控件
+        private void BgWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+
+            System.Threading.Thread.Sleep(3333);
+
+        }
+
+        private void BgWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            loadingCtl.Hide();
+
+        }
+        #endregion
     }
 }

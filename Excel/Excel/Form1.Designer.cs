@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.btnImport = new System.Windows.Forms.Button();
             this.tbName = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
@@ -40,8 +39,6 @@
             this.tbSavePath = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.btnComfirm = new System.Windows.Forms.Button();
-            this.pbLoading = new System.Windows.Forms.PictureBox();
-            ((System.ComponentModel.ISupportInitialize)(this.pbLoading)).BeginInit();
             this.SuspendLayout();
             // 
             // btnImport
@@ -95,7 +92,7 @@
             this.tbKeywords.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.tbKeywords.Size = new System.Drawing.Size(262, 154);
             this.tbKeywords.TabIndex = 3;
-            this.tbKeywords.Text = "苏宁\r\n大中";
+            this.tbKeywords.Text = "苏宁\r\n大中\r\n国美";
             // 
             // label3
             // 
@@ -142,19 +139,6 @@
             this.btnComfirm.UseVisualStyleBackColor = true;
             this.btnComfirm.Click += new System.EventHandler(this.btnComfirm_Click);
             // 
-            // pbLoading
-            // 
-            this.pbLoading.BackColor = System.Drawing.Color.Transparent;
-            this.pbLoading.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pbLoading.Image = ((System.Drawing.Image)(resources.GetObject("pbLoading.Image")));
-            this.pbLoading.Location = new System.Drawing.Point(0, 0);
-            this.pbLoading.Name = "pbLoading";
-            this.pbLoading.Size = new System.Drawing.Size(493, 372);
-            this.pbLoading.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
-            this.pbLoading.TabIndex = 6;
-            this.pbLoading.TabStop = false;
-            this.pbLoading.Visible = false;
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
@@ -171,10 +155,8 @@
             this.Controls.Add(this.btnSavePath);
             this.Controls.Add(this.tbName);
             this.Controls.Add(this.btnImport);
-            this.Controls.Add(this.pbLoading);
             this.Name = "Form1";
             this.Text = "Form1";
-            ((System.ComponentModel.ISupportInitialize)(this.pbLoading)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -193,7 +175,6 @@
         private System.Windows.Forms.TextBox tbSavePath;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Button btnComfirm;
-        private System.Windows.Forms.PictureBox pbLoading;
     }
 }
 
