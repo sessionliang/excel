@@ -71,7 +71,7 @@ namespace Excel
         /// <param name="e"></param>
         private void btnComfirm_Click(object sender, EventArgs e)
         {
-            
+
             try
             {
                 this.pbLoading.Visible = true;
@@ -85,11 +85,19 @@ namespace Excel
                 dt.Columns.Add(new DataColumn("入库日期"));
                 dt.Columns.Add(new DataColumn("备注"));
 
+                #region 打开连接
+                string strConn = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + excelFilePath + ";Extended Properties=Excel 8.0;";
+                OleDbConnection oleDbConn = new OleDbConnection(strConn);
+                if (oleDbConn.State == ConnectionState.Closed)
+                    oleDbConn.Open();
+                #endregion
+
                 //获取模糊查询集合
                 InitVagueList();
                 //获取精确查询集合
-                InitAccurateList();
+                InitAccurateList(oleDbConn);
                 int num = 0;
+
                 string selectStr = "SELECT 收货仓库,商品名称,串号,颜色,meid FROM {0} ";
                 //string groupStr = string.Format(" GROUP BY {0} ", SHCK);
                 foreach (string item in accurateList)
@@ -98,7 +106,7 @@ namespace Excel
                     string whereStr = " WHERE 1=1 ";
                     whereStr += string.Format(" AND {0} = '{1}' ", SHCK, item);
                     dbCmdStr = String.Join(" ", selectStr, whereStr);
-                    DataTable tmp = GetContentsByExcelFile(dbCmdStr);
+                    DataTable tmp = GetContentsByExcelFile(dbCmdStr, oleDbConn);
                     if (tmp.Rows.Count > 0)
                     {
                         foreach (DataRow row in tmp.Rows)
@@ -124,7 +132,7 @@ namespace Excel
                     whereStr += string.Format(" OR {0} LIKE '%{1}' ", SHCK, item);
                     whereStr += string.Format(" OR {0} LIKE '{1}%' )", SHCK, item);
                     dbCmdStr = String.Join(" ", selectStr, whereStr);
-                    DataTable tmp = GetContentsByExcelFile(dbCmdStr);
+                    DataTable tmp = GetContentsByExcelFile(dbCmdStr, oleDbConn);
                     if (tmp.Rows.Count > 0)
                     {
                         foreach (DataRow row in tmp.Rows)
@@ -140,6 +148,10 @@ namespace Excel
                         }
                     }
                 }
+
+                #region 关闭连接
+                oleDbConn.Close();
+                #endregion
 
                 if (dt != null && dt.Rows.Count > 0)
                 {
@@ -160,8 +172,8 @@ namespace Excel
         /// <param name="dt"></param>
         private void SetRowsToExcel(DataTable dt)
         {
-            if (!Directory.Exists(tbSavePath.Text))
-                Directory.CreateDirectory(tbSavePath.Text);
+            if (!Directory.Exists(Path.GetDirectoryName(tbSavePath.Text)))
+                Directory.CreateDirectory(Path.GetDirectoryName(tbSavePath.Text));
             //if (!File.Exists(tbSavePath.Text))
             //    File.Create(tbSavePath.Text).Dispose();
             string fileName = Path.GetFileNameWithoutExtension(tbSavePath.Text);
@@ -199,7 +211,6 @@ namespace Excel
                     for (int i = 0; i < dt.Columns.Count; i++)
                     {
                         insertBuilder.AppendFormat("'{0}', ", row[dt.Columns[i]]);
-                        preInsertBuilder.AppendFormat("[{0}], ", row[dt.Columns[i]]);
                     }
 
 
@@ -268,16 +279,14 @@ namespace Excel
         /// </summary>
         /// <param name="oleDbCmdStr">选择sql语句，{0}代表表名</param>
         /// <returns></returns>
-        public DataTable GetContentsByExcelFile(string oleDbCmdStr)
+        public DataTable GetContentsByExcelFile(string oleDbCmdStr, OleDbConnection oleDbConn)
         {
-            string strConn = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + excelFilePath + ";Extended Properties=Excel 8.0;";
-            OleDbConnection oleDbConn = new OleDbConnection(strConn);
             OleDbCommand oleDbCmd;
             OleDbDataAdapter oleDbAdp;
             DataTable oleDt = new DataTable();
             DataTable dtTableName = new DataTable();
-
-            oleDbConn.Open();
+            if (oleDbConn.State == ConnectionState.Closed)
+                oleDbConn.Open();
             dtTableName = oleDbConn.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, null);
             string[] tableNames = new string[dtTableName.Rows.Count];
             for (int j = 0; j < dtTableName.Rows.Count; j++)
@@ -295,7 +304,6 @@ namespace Excel
                     oleDbCmd = new OleDbCommand(string.Format(oleDbCmdStr, "[" + tableName + "]"), oleDbConn);
                     oleDbAdp = new OleDbDataAdapter(oleDbCmd);
                     oleDbAdp.Fill(oleDt);
-                    oleDbConn.Close();
                     break;
                 }
                 catch { }
@@ -316,7 +324,7 @@ namespace Excel
         /// <summary>
         /// 初始化精确集合
         /// </summary>
-        public void InitAccurateList()
+        public void InitAccurateList(OleDbConnection oleDbConn)
         {
             accurateList = new List<string>();
             string dbCmdStr = string.Empty;
@@ -330,7 +338,7 @@ namespace Excel
                 whereStr += string.Format(" AND {0} NOT LIKE '%{1}' ", SHCK, itme);
             }
             dbCmdStr = String.Join(" ", selectStr, whereStr, groupStr);
-            DataTable oleDt = GetContentsByExcelFile(dbCmdStr);
+            DataTable oleDt = GetContentsByExcelFile(dbCmdStr, oleDbConn);
             if (oleDt.Rows.Count > 0)
             {
                 //ArrayList attributeNames = new ArrayList();

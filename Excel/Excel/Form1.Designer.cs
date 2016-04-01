@@ -95,6 +95,7 @@
             this.tbKeywords.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.tbKeywords.Size = new System.Drawing.Size(262, 154);
             this.tbKeywords.TabIndex = 3;
+            this.tbKeywords.Text = "苏宁\r\n大中";
             // 
             // label3
             // 
@@ -159,7 +160,6 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(493, 372);
-            this.Controls.Add(this.pbLoading);
             this.Controls.Add(this.btnComfirm);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.tbKeywords);
@@ -171,6 +171,7 @@
             this.Controls.Add(this.btnSavePath);
             this.Controls.Add(this.tbName);
             this.Controls.Add(this.btnImport);
+            this.Controls.Add(this.pbLoading);
             this.Name = "Form1";
             this.Text = "Form1";
             ((System.ComponentModel.ISupportInitialize)(this.pbLoading)).EndInit();
