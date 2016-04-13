@@ -93,7 +93,7 @@ namespace Excel
                 dt.Columns.Add(new DataColumn("备注"));
 
                 #region 打开连接
-                string strConn = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" + excelFilePath + ";Extended Properties=Excel 8.0;";
+                string strConn = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + excelFilePath + ";Extended Properties=Excel 8.0;";
                 OleDbConnection oleDbConn = new OleDbConnection(strConn);
                 if (oleDbConn.State == ConnectionState.Closed)
                     oleDbConn.Open();
@@ -184,7 +184,8 @@ namespace Excel
             //if (!File.Exists(tbSavePath.Text))
             //    File.Create(tbSavePath.Text).Dispose();
             string fileName = Path.GetFileNameWithoutExtension(tbSavePath.Text);
-            string OLEDBConnStr = string.Format("Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};", tbSavePath.Text);
+            //string OLEDBConnStr = string.Format("Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};", tbSavePath.Text);
+            string OLEDBConnStr = string.Format("Provider=Microsoft.ACE.OLEDB.12.0;Data Source={0};", tbSavePath.Text);
             OLEDBConnStr += " Extended Properties=Excel 8.0;";
             StringBuilder createBuilder = new StringBuilder();
 
