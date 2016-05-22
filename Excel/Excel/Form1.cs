@@ -256,7 +256,7 @@ namespace Excel
             string path = "";
             using (OpenFileDialog dialog = new OpenFileDialog())
             {
-                dialog.Filter = "文本文件(*.xls)|*.xls";
+                dialog.Filter = "文本文件(*.xls)|*.*";
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
                     path = dialog.FileName;

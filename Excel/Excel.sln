@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.30110.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Excel", "Excel\Excel.csproj", "{BF08852A-9552-449E-A61C-EE7DD9E7710E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Text", "Text\Text.csproj", "{D4988F6A-257D-43CD-8C9A-88A6E0652429}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelToTxt", "ExcelToTxt\ExcelToTxt.csproj", "{2F3129C2-ABA0-4AB9-9626-2FBA3C16BCD7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{BF08852A-9552-449E-A61C-EE7DD9E7710E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF08852A-9552-449E-A61C-EE7DD9E7710E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BF08852A-9552-449E-A61C-EE7DD9E7710E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4988F6A-257D-43CD-8C9A-88A6E0652429}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4988F6A-257D-43CD-8C9A-88A6E0652429}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4988F6A-257D-43CD-8C9A-88A6E0652429}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4988F6A-257D-43CD-8C9A-88A6E0652429}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F3129C2-ABA0-4AB9-9626-2FBA3C16BCD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F3129C2-ABA0-4AB9-9626-2FBA3C16BCD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F3129C2-ABA0-4AB9-9626-2FBA3C16BCD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F3129C2-ABA0-4AB9-9626-2FBA3C16BCD7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
